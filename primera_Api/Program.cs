@@ -1,6 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using primera_Api.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddDbContext<DbEmpresaContext>(Options =>
+{
+    Options.UseSqlServer(builder.Configuration.GetConnectionString("ConexionBD"));
+});
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

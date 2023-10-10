@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\primera_Api.props" />
+</Project>
