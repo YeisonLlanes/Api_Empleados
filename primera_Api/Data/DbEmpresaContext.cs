@@ -11,22 +11,21 @@ public partial class DbEmpresaContext : DbContext
     {
     }
 
-    public DbEmpresaContext(DbContextOptions<DbEmpresaContext> options)
-        : base(options)
+    public DbEmpresaContext(DbContextOptions<DbEmpresaContext> options): base(options)
     {
     }
 
-    public virtual DbSet<Cargos> Cargos { get; set; }
+    public virtual DbSet<Cargo> Cargos { get; set; }
 
-    public virtual DbSet<Departamentos> Departamentos { get; set; }
+    public virtual DbSet<Departamento> Departamentos { get; set; }
 
-    public virtual DbSet<Empleados> Empleados { get; set; }
+    public virtual DbSet<Empleado> Empleados { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Cargos>(entity =>
+        modelBuilder.Entity<Cargo>(entity =>
         {
             entity.HasKey(e => e.IdCargo);
 
@@ -47,7 +46,7 @@ public partial class DbEmpresaContext : DbContext
                 .HasConstraintName("FK_cargos_departamentos");
         });
 
-        modelBuilder.Entity<Departamentos>(entity =>
+        modelBuilder.Entity<Departamento>(entity =>
         {
             entity.HasKey(e => e.IdDepartamento);
 
@@ -59,7 +58,7 @@ public partial class DbEmpresaContext : DbContext
                 .HasColumnName("descripcion");
         });
 
-        modelBuilder.Entity<Empleados>(entity =>
+        modelBuilder.Entity<Empleado>(entity =>
         {
             entity.HasKey(e => e.IdEmpleado);
 
