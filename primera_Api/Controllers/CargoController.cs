@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using primera_Api.Data;
 using primera_Api.Models;
 
@@ -9,6 +8,7 @@ namespace primera_Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class CargoController : ControllerBase
     {
         private readonly DbEmpresaContext _context;
@@ -17,8 +17,9 @@ namespace primera_Api.Controllers
         }
 
         [HttpGet]
-        //200 - 404
-        public async Task<ActionResult<IEnumerable<Cargo>>> GetAll()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<CargoDTO>> GetAll()
         {
             if(_context.Cargos == null)
             {
@@ -29,19 +30,19 @@ namespace primera_Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Cargo>> GetCargoById(int id)
+        public async Task<ActionResult<CargoDTO>> GetCargoById(int id)
         {
             var cargo = await _context.Cargos.FindAsync(id);
             if(cargo == null)
             {
                 return NotFound();
             }
-            return cargo;
+            return cargoToDTO(cargo);
 
         }
 
         [HttpPost]
-        public async Task<ActionResult<Cargo>> CreateCargo([FromBody] Cargo cargo)
+        public async Task<ActionResult<CargoDTO>> CreateCargo([FromBody] CargoDTO cargo)
         {
             var dpto = await _context.Departamentos.FindAsync(cargo.IdDepartamento);
             if (dpto == null)
@@ -54,7 +55,7 @@ namespace primera_Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateCargo(int id, Cargo cargo)
+        public async Task<ActionResult> UpdateCargo(int id, CargoDTO cargo)
         {
             if(id != cargo.IdCargo)
             {
@@ -85,6 +86,15 @@ namespace primera_Api.Controllers
             await _context.SaveChangesAsync();
             return Ok();
         }
+
+        private static CargoDTO cargoToDTO(Cargo cargo) =>
+          new CargoDTO
+          {
+              IdCargo = cargo.IdCargo,
+              IdDepartamento = cargo.IdDepartamento,
+              Descripcion = cargo.Descripcion,
+              Salario = cargo.Salario
+          };
 
     }
 }

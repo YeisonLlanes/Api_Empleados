@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Protocol;
 using primera_Api.Data;
 using primera_Api.Models;
 
@@ -9,6 +8,7 @@ namespace primera_Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class EmpleadoController : ControllerBase
     {
         private readonly DbEmpresaContext _context;
@@ -19,18 +19,21 @@ namespace primera_Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Empleado>>> GetAll()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<EmpleadoDTO>> GetAll()
         {
             if(_context.Empleados == null)
             {
                 return NotFound();
             }
-            
-            return await _context.Empleados.ToListAsync();
+            var empleado = await _context.Empleados.ToListAsync();
+
+            return Ok(empleado);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Empleado>> GetById(int id)
+        public async Task<ActionResult<EmpleadoDTO>> GetById(int id)
         {
             var empleado = await _context.Empleados.FindAsync(id);
             if(empleado == null)
@@ -38,12 +41,12 @@ namespace primera_Api.Controllers
                 return NotFound();
             }
 
-            return empleado;
+            return empleadoToDTO(empleado);
 
         }
 
         [HttpPost]
-        public async Task<ActionResult<Empleado>> CreateEmpleado([FromBody] Empleado empleado)
+        public async Task<ActionResult<EmpleadoDTO>> CreateEmpleado([FromBody] EmpleadoDTO empleado)
         {
             var cargo = await _context.Cargos.FindAsync(empleado.IdCargo);
             if (cargo == null)
@@ -57,7 +60,7 @@ namespace primera_Api.Controllers
         }
 
         [HttpPut("id")]
-        public async Task<ActionResult> UpdateEmpleado(int id, [FromBody] Empleado empleado)
+        public async Task<ActionResult> UpdateEmpleado(int id, [FromBody] EmpleadoDTO empleado)
         {
             if(id != empleado.IdEmpleado)
             {
@@ -87,6 +90,15 @@ namespace primera_Api.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        private static EmpleadoDTO empleadoToDTO(Empleado empleado) =>
+         new EmpleadoDTO
+         {
+             IdEmpleado = empleado.IdEmpleado,
+             Nombre = empleado.Nombre,
+             IdCargo = empleado.IdCargo,
+             FechaIngreso = empleado.FechaIngreso
+         };
 
 
     }
