@@ -45,6 +45,12 @@ namespace primera_Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Empleado>> CreateEmpleado([FromBody] Empleado empleado)
         {
+            var cargo = await _context.Cargos.FindAsync(empleado.IdCargo);
+            if (cargo == null)
+            {
+                return NotFound("Cargo No existe");
+            }
+
             _context.Add(empleado);
             await _context.SaveChangesAsync();
             return Ok(empleado);
@@ -57,6 +63,13 @@ namespace primera_Api.Controllers
             {
                 return BadRequest();
             }
+
+            var cargo = await _context.Cargos.FindAsync(empleado.IdCargo);
+            if(cargo == null)
+            {
+                return NotFound("Cargo No existe");
+            }
+
             _context.Entry(empleado).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return NoContent();

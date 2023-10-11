@@ -43,6 +43,11 @@ namespace primera_Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Cargo>> CreateCargo([FromBody] Cargo cargo)
         {
+            var dpto = await _context.Departamentos.FindAsync(cargo.IdDepartamento);
+            if (dpto == null)
+            {
+                return NotFound("Departamento no existe");
+            }
             _context.Add(cargo);
             await _context.SaveChangesAsync();
             return Ok(cargo);
@@ -53,9 +58,15 @@ namespace primera_Api.Controllers
         {
             if(id != cargo.IdCargo)
             {
-                return BadRequest();
+                return BadRequest("Cargo No coincide");
             }
-            
+
+            var dpto = await _context.Departamentos.FindAsync(cargo.IdDepartamento);
+            if (dpto == null)
+            {
+                return NotFound("Departamento no existe");
+            }
+
             _context.Entry(cargo).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return NoContent();
