@@ -25,8 +25,12 @@ namespace primera_Api.Controllers
             {
                 return NotFound();
             }
-            var cargo = await _context.Cargos.ToListAsync();
-            return Ok(cargo);
+            //var cargo = await _context.Cargos.ToListAsync();
+            var cargoDTO = await _context.Cargos
+           .Select(x => cargoToDTO(x))
+           .ToListAsync();
+
+            return Ok(cargoDTO);
         }
 
         [HttpGet("{id}")]
@@ -42,31 +46,48 @@ namespace primera_Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<CargoDTO>> CreateCargo([FromBody] CargoDTO cargo)
+        public async Task<ActionResult<CargoDTO>> CreateCargo([FromBody] CargoDTO cargoDTO)
         {
-            var dpto = await _context.Departamentos.FindAsync(cargo.IdDepartamento);
+            var dpto = await _context.Departamentos.FindAsync(cargoDTO.IdDepartamento);
             if (dpto == null)
             {
                 return NotFound("Departamento no existe");
             }
+            var cargo = DTOtoCargo(cargoDTO);
+
             _context.Add(cargo);
             await _context.SaveChangesAsync();
             return Ok(cargo);
+
+            /*_context.Add(cargo);
+            await _context.SaveChangesAsync();
+            return Ok(cargo);*/
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateCargo(int id, CargoDTO cargo)
+        public async Task<ActionResult> UpdateCargo(int id, CargoDTO cargoDTO)
         {
-            if(id != cargo.IdCargo)
+            if(id != cargoDTO.IdCargo)
             {
                 return BadRequest("Cargo No coincide");
             }
 
-            var dpto = await _context.Departamentos.FindAsync(cargo.IdDepartamento);
+            var dpto = await _context.Departamentos.FindAsync(cargoDTO.IdDepartamento);
             if (dpto == null)
             {
                 return NotFound("Departamento no existe");
             }
+
+            var cargo = await _context.Cargos.FindAsync(id);
+
+            if (cargo == null)
+            {
+                return NotFound();
+            }
+
+            cargo.IdDepartamento = cargoDTO.IdDepartamento;
+            cargo.Descripcion = cargoDTO.Descripcion;
+            cargo.Salario = cargoDTO.Salario;
 
             _context.Entry(cargo).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -94,6 +115,15 @@ namespace primera_Api.Controllers
               IdDepartamento = cargo.IdDepartamento,
               Descripcion = cargo.Descripcion,
               Salario = cargo.Salario
+          };
+
+        private static Cargo DTOtoCargo(CargoDTO cargoDTO) =>
+          new Cargo
+          {
+              IdCargo = cargoDTO.IdCargo,
+              IdDepartamento = cargoDTO.IdDepartamento,
+              Descripcion = cargoDTO.Descripcion,
+              Salario = cargoDTO.Salario
           };
 
     }

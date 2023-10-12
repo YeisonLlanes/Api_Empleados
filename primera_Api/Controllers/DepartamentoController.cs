@@ -24,11 +24,17 @@ namespace primera_Api.Controllers
         public async Task<ActionResult<DepartamentoDTO>> GetAll()
         //Task<ActionResult<List<Departamento>>>
         {
-            var Dpto = await _context.Departamentos.ToListAsync();
+            //var Dpto = await _context.Departamentos.ToListAsync();
             //return RedirectToAction("Index", "Departamento");
             //return await _context.Departamentos.ToListAsync();
             //return View("~/Views/Departamento/Index.cshtml", Dpto);
-            return Ok(Dpto);
+
+            var dptoDTO = await _context.Departamentos
+           .Select(x => dptoToDTO(x))
+           .ToListAsync();
+
+
+            return Ok(dptoDTO);
         }
 
         [HttpGet("{int}")]
@@ -45,46 +51,40 @@ namespace primera_Api.Controllers
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]//200-201-400
-        public async Task<ActionResult<DepartamentoDTO>>CreateDpto([FromBody] DepartamentoDTO dpto)
+        public async Task<ActionResult<DepartamentoDTO>>CreateDpto([FromBody] DepartamentoDTO dptoDTO)
         {
-            _context.Add(dpto);
+            var departamento = DTOtoDepartamento(dptoDTO);
+
+            _context.Add(departamento);
             await _context.SaveChangesAsync();
 
-            return Ok(dpto);
+            return Ok(departamento);
         }
 
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateDpto (int id, [FromBody] DepartamentoDTO dpto)
+        public async Task<IActionResult> UpdateDpto (int id, [FromBody] DepartamentoDTO dptoDTO)
         {
-            if(id != dpto.IdDepartamento)
+            if(id != dptoDTO.IdDepartamento)
             {
                 return BadRequest();
             }
 
-            _context.Entry(dpto).State = EntityState.Modified;
+            var departamento = await _context.Departamentos.FindAsync(id);
 
-            try
+            if (departamento == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch(DbUpdateConcurrencyException)
-            {
-                if (!DepartamentoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
 
-            }
-            
+            departamento.Descripcion = dptoDTO.Descripcion;
+
+            _context.Entry(departamento).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
             return NoContent();
-                
+
         }
 
         [HttpDelete("{id}")]
@@ -104,10 +104,10 @@ namespace primera_Api.Controllers
             return NoContent();
         }
 
-        private bool DepartamentoExists(int id)
+        /*private bool DepartamentoExists(int id)
         {
             return (_context.Departamentos?.Any(e => e.IdDepartamento == id)).GetValueOrDefault();
-        }
+        }*/
 
         private static DepartamentoDTO dptoToDTO(Departamento dpto) =>
           new DepartamentoDTO
@@ -115,6 +115,12 @@ namespace primera_Api.Controllers
               IdDepartamento = dpto.IdDepartamento,
               Descripcion = dpto.Descripcion,
           };
+
+        private static Departamento DTOtoDepartamento(DepartamentoDTO dptoDTO) => new Departamento
+        {
+            IdDepartamento = dptoDTO.IdDepartamento,
+            Descripcion = dptoDTO.Descripcion
+        };
 
     }
 }

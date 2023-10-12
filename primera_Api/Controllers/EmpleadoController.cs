@@ -27,9 +27,13 @@ namespace primera_Api.Controllers
             {
                 return NotFound();
             }
-            var empleado = await _context.Empleados.ToListAsync();
+            //var empleado = await _context.Empleados.ToListAsync();
 
-            return Ok(empleado);
+            var empleadoDTO = await _context.Empleados
+            .Select(x => empleadoToDTO(x))
+            .ToListAsync();
+
+            return Ok(empleadoDTO);
         }
 
         [HttpGet("{id}")]
@@ -46,32 +50,44 @@ namespace primera_Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<EmpleadoDTO>> CreateEmpleado([FromBody] EmpleadoDTO empleado)
+        public async Task<ActionResult<EmpleadoDTO>> CreateEmpleado([FromBody] EmpleadoDTO empleadoDTO)
         {
-            var cargo = await _context.Cargos.FindAsync(empleado.IdCargo);
+            var cargo = await _context.Cargos.FindAsync(empleadoDTO.IdCargo);
             if (cargo == null)
             {
                 return NotFound("Cargo No existe");
             }
 
+            var empleado = DTOtoEmpleado(empleadoDTO);
+           
             _context.Add(empleado);
             await _context.SaveChangesAsync();
             return Ok(empleado);
         }
 
         [HttpPut("id")]
-        public async Task<ActionResult> UpdateEmpleado(int id, [FromBody] EmpleadoDTO empleado)
+        public async Task<ActionResult> UpdateEmpleado(int id, [FromBody] EmpleadoDTO empleadoDTO)
         {
-            if(id != empleado.IdEmpleado)
+            if(id != empleadoDTO.IdEmpleado)
             {
                 return BadRequest();
             }
 
-            var cargo = await _context.Cargos.FindAsync(empleado.IdCargo);
+            var cargo = await _context.Cargos.FindAsync(empleadoDTO.IdCargo);
             if(cargo == null)
             {
                 return NotFound("Cargo No existe");
             }
+
+            var empleado = await _context.Empleados.FindAsync(id);
+            
+            if (empleado == null)
+            {
+                return NotFound();
+            }
+
+            empleado.IdCargo = empleadoDTO.IdCargo;
+            empleado.Nombre = empleadoDTO.Nombre;
 
             _context.Entry(empleado).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -99,6 +115,14 @@ namespace primera_Api.Controllers
              IdCargo = empleado.IdCargo,
              FechaIngreso = empleado.FechaIngreso
          };
+
+        private static Empleado DTOtoEmpleado(EmpleadoDTO empleadoDTO) => new Empleado
+        {
+            IdEmpleado = empleadoDTO.IdEmpleado,
+            Nombre = empleadoDTO.Nombre,
+            IdCargo = empleadoDTO.IdCargo,
+            FechaIngreso = empleadoDTO.FechaIngreso
+        };
 
 
     }
