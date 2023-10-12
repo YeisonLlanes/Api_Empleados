@@ -2,7 +2,7 @@
 
 namespace primera_Api.Data
 {
-    public class CargoDTO
+    public class CargoDTO 
     {
         public int IdCargo { get; set; }
 

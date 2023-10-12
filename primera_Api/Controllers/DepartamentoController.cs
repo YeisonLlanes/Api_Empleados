@@ -18,20 +18,21 @@ namespace primera_Api.Controllers
             _context = context;
         }
 
+        
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK)]//200-404
         public async Task<ActionResult<DepartamentoDTO>> GetAll()
         //Task<ActionResult<List<Departamento>>>
         {
             var Dpto = await _context.Departamentos.ToListAsync();
             //return RedirectToAction("Index", "Departamento");
             //return await _context.Departamentos.ToListAsync();
-            //return View();
+            //return View("~/Views/Departamento/Index.cshtml", Dpto);
             return Ok(Dpto);
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("{int}")]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//200-404
         public async Task<ActionResult<DepartamentoDTO>> GetDptoById(int id)
         {
             var dpto = await _context.Departamentos.FindAsync(id);
@@ -43,7 +44,7 @@ namespace primera_Api.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK)]//200-201-400
         public async Task<ActionResult<DepartamentoDTO>>CreateDpto([FromBody] DepartamentoDTO dpto)
         {
             _context.Add(dpto);
@@ -55,6 +56,7 @@ namespace primera_Api.Controllers
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateDpto (int id, [FromBody] DepartamentoDTO dpto)
         {
             if(id != dpto.IdDepartamento)
@@ -87,7 +89,7 @@ namespace primera_Api.Controllers
 
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//204-400-404
         public async Task<IActionResult> DeleteDpto(int id)
         {
             var dpto = await _context.Departamentos.FindAsync(id);
