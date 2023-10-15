@@ -3,19 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using primera_Api.Data;
 using primera_Api.Models;
+using primera_Api.Services;
 
 namespace primera_Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     //public class DepartamentoController : ControllerBase
     //Atributo [ApiController] en varios controladores https://learn.microsoft.com/es-mx/aspnet/core/web-api/?view=aspnetcore-7.0
     public class DepartamentoController : primerController
     {
         private readonly DbEmpresaContext _context;
 
-        public DepartamentoController(DbEmpresaContext context) 
+        private readonly IDepartamento _departamentoService;
+
+        public DepartamentoController(DbEmpresaContext context, IDepartamento departamentoServices) 
         {
             _context = context;
+            _departamentoService = departamentoServices;
         }
 
         
@@ -29,34 +33,39 @@ namespace primera_Api.Controllers
             //return await _context.Departamentos.ToListAsync();
             //return View("~/Views/Departamento/Index.cshtml", Dpto);
 
-            var dptoDTO = await _context.Departamentos
+            /*var dptoDTO = await _context.Departamentos
            .Select(x => dptoToDTO(x))
-           .ToListAsync();
+           .ToListAsync(); --> Sin Capa Servicio*/
 
+            var dptoDTO = await _departamentoService.GetDepartamentos();
 
             return Ok(dptoDTO);
         }
 
-        [HttpGet("{int}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]//200-404
         public async Task<ActionResult<DepartamentoDTO>> GetDptoById(int id)
         {
-            var dpto = await _context.Departamentos.FindAsync(id);
-            if(dpto == null)
+            //var dpto = await _context.Departamentos.FindAsync(id); --> Sin Capa Servicio
+            var dpto = await _departamentoService.GetById(id);
+
+            if (dpto.IdDepartamento == 0 || dpto.Descripcion == null)
             {
                 return NotFound();
             }
-            return dptoToDTO(dpto);
+            return dpto;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]//200-201-400
         public async Task<ActionResult<DepartamentoDTO>>CreateDpto([FromBody] DepartamentoDTO dptoDTO)
         {
-            var departamento = DTOtoDepartamento(dptoDTO);
+            /*var departamento = DTOtoDepartamento(dptoDTO);
 
             _context.Add(departamento);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();-->Sin siervicios*/
+
+            var departamento = await _departamentoService.Create(dptoDTO);
 
             return Ok(departamento);
         }
@@ -72,17 +81,23 @@ namespace primera_Api.Controllers
                 return BadRequest();
             }
 
-            var departamento = await _context.Departamentos.FindAsync(id);
-
+            /*var departamento = await _context.Departamentos.FindAsync(id);
             if (departamento == null)
+            {
+                return NotFound();
+            }--> Sin servicios*/
+
+            var departamento = await _departamentoService.Update(id, dptoDTO);
+
+            if (departamento.IdDepartamento == 0 || departamento.Descripcion == null)
             {
                 return NotFound();
             }
 
-            departamento.Descripcion = dptoDTO.Descripcion;
-
+            /*departamento.Descripcion = dptoDTO.Descripcion;
             _context.Entry(departamento).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();--> Sin servicios*/
+
             return NoContent();
 
         }
@@ -92,7 +107,7 @@ namespace primera_Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]//204-400-404
         public async Task<IActionResult> DeleteDpto(int id)
         {
-            var dpto = await _context.Departamentos.FindAsync(id);
+            /*var dpto = await _context.Departamentos.FindAsync(id);
             
             if(dpto == null)
             {
@@ -101,7 +116,22 @@ namespace primera_Api.Controllers
 
             _context.Departamentos.Remove(dpto);
             await _context.SaveChangesAsync();
+            return NoContent(); --> Sin servicios*/
+
+            var departamento = await _departamentoService.Delete(id);
+
+            if (!departamento)
+            {
+                return NotFound();
+            }
+
+            /*departamento.Descripcion = dptoDTO.Descripcion;
+            _context.Entry(departamento).State = EntityState.Modified;
+            await _context.SaveChangesAsync();--> Sin servicios*/
+
             return NoContent();
+
+
         }
 
         /*private bool DepartamentoExists(int id)
